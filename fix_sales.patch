@@ -1,0 +1,39 @@
+--- a/frontend/src/pages/ProductDetailPage.tsx
++++ b/frontend/src/pages/ProductDetailPage.tsx
+@@ -75,3 +75,17 @@
+ 
+-  const maxSaleQty = Math.max(...sales.map(s => 1), 1); // Mocked quantity
++  // Group sales by id_pedido
++  const groupedSalesObj = sales.reduce((acc, curr) => {
++    if (!acc[curr.id_pedido]) {
++      acc[curr.id_pedido] = { ...curr, qty: 0, preco_BRL: 0, preco_frete: 0 };
++    }
++    acc[curr.id_pedido].qty += 1;
++    acc[curr.id_pedido].preco_BRL += curr.preco_BRL;
++    acc[curr.id_pedido].preco_frete += curr.preco_frete;
++    return acc;
++  }, {} as Record<string, Sale & { qty: number }>);
++  
++  const groupedSales = Object.values(groupedSalesObj).sort(
++    (a, b) => new Date(b.data_pedido).getTime() - new Date(a.data_pedido).getTime()
++  );
++
++  const maxSaleQty = Math.max(...groupedSales.map(s => s.qty), 1);
+ 
+@@ -148,3 +162,3 @@
+               <div className="sales-section">
+-                {sales.length === 0 ? (
++                {groupedSales.length === 0 ? (
+                   <p style={{ color: 'var(--text3)', textAlign: 'center', padding: '32px 0' }}>
+@@ -154,3 +168,3 @@
+                   </p>
+-                ) : sales.map(s => (
++                ) : groupedSales.map(s => (
+                   <div key={s.id_pedido} className="sale-row">
+@@ -159,5 +173,5 @@
+                       <div className="sale-bar" style={{ width: `${(1 / maxSaleQty) * 100}%` }} />
+                     </div>
+-                    <span className="sale-qty">1 un.</span>
++                    <span className="sale-qty">{s.qty} un.</span>
+                     <span className="sale-revenue">{fmt(s.preco_BRL + s.preco_frete)}</span>
+                   </div>
